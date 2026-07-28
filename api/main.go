@@ -10,6 +10,8 @@ import (
 	"flyxy-api/internal/handlers"
 	"flyxy-api/internal/middleware"
 	"flyxy-api/internal/prim"
+	"flyxy-api/internal/repositories"
+	"flyxy-api/internal/services"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -19,7 +21,13 @@ import (
 func main() {
 	_ = godotenv.Load()
 
-	db.InitDB("flyxy.db")
+	// 1. Initialisation de la BDD
+	database := db.InitDB("flyxy.db")
+
+	// 2. Injection de dépendances (Clean Architecture)
+	userRepo := repositories.NewSQLiteUserRepository(database)
+	userService := services.NewUserService(userRepo)
+	userHandler := handlers.NewUserHandler(userService)
 
 	router := gin.Default()
 
@@ -45,8 +53,8 @@ func main() {
 
 		authGroup := v1.Group("/auth")
 		{
-			authGroup.POST("/register", handlers.Register)
-			authGroup.POST("/login", handlers.Login)
+			authGroup.POST("/register", userHandler.Register)
+			authGroup.POST("/login", userHandler.Login)
 		}
 
 		v1.GET("/test-prim", func(c *gin.Context) {
@@ -62,7 +70,7 @@ func main() {
 	protected := v1.Group("/")
 	protected.Use(middleware.AuthRequired())
 	{
-		protected.GET("/me", handlers.GetMe)
+		protected.GET("/me", userHandler.GetMe)
 		// protected.PATCH("/me", handlers.UpdateMe)
 		// protected.GET("/me/favorites", handlers.GetFavorites)
 		// protected.GET("/me/favorites/routes", handlers.GetFavoriteRoutes)

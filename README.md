@@ -1,4 +1,4 @@
-# 🚌 Flyxy (Mini-Transit) — API & Interface Temps Réel
+# 🚌 Flyxy — La mobilité pour tous
 
 Flyxy est une application mobile moderne (iOS & Android) accompagnée de son backend dédié, permettant de consulter les horaires de transports en commun en temps réel (via l'API PRIM / Navitia d'Île-de-France Mobilités).
 

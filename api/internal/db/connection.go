@@ -9,14 +9,8 @@ import (
 	"gorm.io/gorm"
 )
 
-type Store struct {
-	DB *gorm.DB
-}
-
-var GlobalStore *Store
-
-// InitDB initialise la connexion SQLite et lance l'auto-migration
-func InitDB(dsn string) {
+// InitDB initialise la connexion SQLite, lance l'auto-migration et retourne l'instance DB
+func InitDB(dsn string) *gorm.DB {
 	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Échec de la connexion à la base de données : %v", err)
@@ -35,19 +29,5 @@ func InitDB(dsn string) {
 	}
 
 	log.Println("✅ Tables GORM migrées avec succès.")
-	GlobalStore = &Store{DB: db}
-}
-
-// ----------------------------------------------------
-// METHODES DU STORE (Repository Pattern)
-// ----------------------------------------------------
-
-func (s *Store) SaveUser(user *models.User) error {
-	return s.DB.Save(user).Error
-}
-
-func (s *Store) GetUserByEmail(email string) (models.User, bool) {
-	var user models.User
-	result := s.DB.Where("email = ?", email).First(&user)
-	return user, result.Error == nil
+	return db
 }
