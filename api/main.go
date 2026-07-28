@@ -6,12 +6,12 @@ import (
 	"os"
 	"strings"
 
-	"flyxy-api/internal/db"
 	"flyxy-api/internal/handlers"
 	"flyxy-api/internal/middleware"
-	"flyxy-api/internal/prim"
 	"flyxy-api/internal/repositories"
 	"flyxy-api/internal/services"
+	"flyxy-api/internal/utils/db"
+	"flyxy-api/internal/utils/prim"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"

@@ -2,7 +2,7 @@ package services
 
 import (
 	"errors"
-	"flyxy-api/internal/auth"
+	"flyxy-api/internal/utils/auth"
 	"flyxy-api/internal/dto"
 
 	"golang.org/x/crypto/bcrypt"

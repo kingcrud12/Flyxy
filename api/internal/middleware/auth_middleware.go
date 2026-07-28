@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 
-	"flyxy-api/internal/auth"
+	"flyxy-api/internal/utils/auth"
 
 	"github.com/gin-gonic/gin"
 )
