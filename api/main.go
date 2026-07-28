@@ -3,12 +3,15 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
+	"strings"
 
 	"flyxy-api/internal/db"
 	"flyxy-api/internal/handlers"
 	"flyxy-api/internal/middleware"
 	"flyxy-api/internal/prim"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -19,6 +22,22 @@ func main() {
 	db.InitDB("flyxy.db")
 
 	router := gin.Default()
+
+	allowedOriginsStr := os.Getenv("ALLOWED_ORIGINS")
+	var allowedOrigins []string
+	if allowedOriginsStr != "" {
+		allowedOrigins = strings.Split(allowedOriginsStr, ",")
+	} else {
+		allowedOrigins = []string{"http://localhost:5173"}
+	}
+
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     allowedOrigins,
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+	}))
 
 	v1 := router.Group("/api/v1")
 	{
@@ -49,7 +68,6 @@ func main() {
 		// protected.GET("/me/favorites/routes", handlers.GetFavoriteRoutes)
 	}
 
-	// 4. Lancer le serveur
 	fmt.Println("🚀 Serveur démarré sur http://localhost:8081")
 	if err := router.Run(":8081"); err != nil {
 		log.Fatalf("Erreur fatale : %v", err)

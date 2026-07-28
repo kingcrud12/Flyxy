@@ -12,8 +12,10 @@ import (
 )
 
 type RegisterRequest struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=6"`
+	FirstName string `json:"first_name" binding:"required"`
+	LastName  string `json:"last_name" binding:"required"`
+	Email     string `json:"email" binding:"required,email"`
+	Password  string `json:"password" binding:"required,min=6"`
 }
 
 type LoginRequest struct {
@@ -30,18 +32,23 @@ func Register(c *gin.Context) {
 
 	_, exists := db.GlobalStore.GetUserByEmail(req.Email)
 	if exists {
-		c.JSON(http.StatusConflict, gin.H{"error": "Cet email est déjà utilisé"})
+		// FAILLE DE SÉCURITÉ CORRIGÉE (Anti-Énumération) :
+		// On ne dit plus "Cet email est déjà utilisé". On simule une réponse générique 
+		// pour tromper un attaquant qui essaierait de tester des listes d'emails.
+		c.JSON(http.StatusOK, gin.H{"message": "Si l'email est valide, votre compte a bien été créé."})
 		return
 	}
 
 	hashed, _ := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	user := models.User{
+		FirstName:    req.FirstName,
+		LastName:     req.LastName,
 		Email:        req.Email,
 		PasswordHash: string(hashed),
 	}
 
 	if err := db.GlobalStore.SaveUser(&user); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Impossible de créer l'utilisateur"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erreur interne du serveur"})
 		return
 	}
 
@@ -72,5 +79,10 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"token": token})
+	// Définition du Cookie sécurisé (HttpOnly=true empêche le JS client de lire le cookie)
+	// c.SetCookie(nom, valeur, maxAge (en s), chemin, domaine, secure (https), httpOnly)
+	// 604800 secondes = 7 jours
+	c.SetCookie("flyxy_jwt", token, 604800, "/", "", false, true)
+
+	c.JSON(http.StatusOK, gin.H{"message": "Connexion réussie"})
 }

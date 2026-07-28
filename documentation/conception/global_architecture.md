@@ -4,9 +4,9 @@ Ce diagramme illustre les différentes couches logicielles du projet et la mani�
 
 ```mermaid
 graph TD
-    subgraph FRONTEND ["Frontend (Mobile App Flutter)"]
-        UI_VIEWS["UI Components<br/>• StationBoardView<br/>• DepartureCard<br/>• SearchBar"]
-        STATE_MGR["State Manager (TanStack Query)<br/>• Stratégie de Cache (30s)<br/>• Auto-refetch au focus<br/>• Mode Offline"]
+    subgraph FRONTEND ["Frontend (Mobile App Flutter iOS/Android)"]
+        UI_VIEWS["UI Components<br/>• HomeView (Liquid Glass)<br/>• DepartureCard<br/>• MainWrapper (Carousel)"]
+        STATE_MGR["State Manager (Provider)<br/>• ViewModels (ChangeNotifier)<br/>• Appels Dio<br/>• Injection de dépendances"]
         
         UI_VIEWS -->|"Invoque les hooks"| STATE_MGR
     end

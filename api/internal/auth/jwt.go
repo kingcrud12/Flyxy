@@ -12,12 +12,12 @@ var jwtKey = []byte(os.Getenv("JWT_SECRET"))
 
 // Claims représente le contenu du Payload du JWT
 type Claims struct {
-	UserID uint `json:"user_id"`
+	UserID string `json:"user_id"`
 	jwt.RegisteredClaims
 }
 
 // GenerateToken crée un token JWT pour un ID utilisateur donné
-func GenerateToken(userID uint) (string, error) {
+func GenerateToken(userID string) (string, error) {
 	if len(jwtKey) == 0 {
 		jwtKey = []byte("super_secret_key_change_me") // Fallback de dev
 	}

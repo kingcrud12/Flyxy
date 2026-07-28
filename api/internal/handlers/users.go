@@ -20,15 +20,17 @@ func GetMe(c *gin.Context) {
 
 	// Récupère l'utilisateur depuis le Store
 	var user models.User
-	result := db.GlobalStore.DB.First(&user, userID)
+	result := db.GlobalStore.DB.First(&user, "id = ?", userID)
 	if result.Error != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Utilisateur introuvable"})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Profil récupéré avec succès",
-		// "user": user // À décommenter quand on aura défini la structure User propre dans GetMe
-		"user_id": userID,
+		"message":    "Profil récupéré avec succès",
+		"id":         user.ID,
+		"email":      user.Email,
+		"first_name": user.FirstName,
+		"last_name":  user.LastName,
 	})
 }

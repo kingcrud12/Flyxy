@@ -10,23 +10,23 @@ erDiagram
     USERS ||--o{ FAVORITE_ROUTES : "possède"
 
     USERS {
-        int id PK "Identifiant unique"
+        string id PK "Identifiant unique (UUID)"
         string email "Adresse email (Unique)"
         string password_hash "Mot de passe hashé (bcrypt)"
         datetime created_at "Date de création"
     }
 
     FAVORITE_PLACES {
-        int id PK
-        int user_id FK "Référence à l'utilisateur"
+        string id PK "Identifiant unique (UUID)"
+        string user_id FK "Référence à l'utilisateur (UUID)"
         string name "Nom personnalisé (ex: 'Maison')"
         string stop_area_id "ID de la station PRIM (ex: stop_area:IDFM:...)"
         datetime created_at
     }
 
     FAVORITE_ROUTES {
-        int id PK
-        int user_id FK "Référence à l'utilisateur"
+        string id PK "Identifiant unique (UUID)"
+        string user_id FK "Référence à l'utilisateur (UUID)"
         string name "Nom de l'itinéraire (ex: 'Maison -> Travail')"
         string from_stop_id "ID station de départ"
         string to_stop_id "ID station d'arrivée"
