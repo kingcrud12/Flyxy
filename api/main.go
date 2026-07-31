@@ -116,8 +116,8 @@ func main() {
 		}
 	}
 
-	fmt.Println(" Serveur démarré sur http://localhost:8081")
-	if err := router.Run(":8081"); err != nil {
+	fmt.Println(" Serveur démarré sur http://localhost:8083")
+	if err := router.Run(":8083"); err != nil {
 		log.Fatalf("Erreur fatale : %v", err)
 	}
 }
