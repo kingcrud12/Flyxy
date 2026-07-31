@@ -21,9 +21,9 @@ class _SearchViewScreenState extends State<SearchViewScreen> {
   List<dynamic> _results = [];
   bool _isLoading = false;
   Position? _currentPosition;
-  
   final stt.SpeechToText _speechToText = stt.SpeechToText();
   bool _isListening = false;
+  bool _speechEnabled = false;
   Timer? _silenceTimer;
 
   @override
@@ -38,8 +38,27 @@ class _SearchViewScreenState extends State<SearchViewScreen> {
   void initState() {
     super.initState();
     _initLocation();
-    if (widget.startListening) {
-      // Small delay to allow transition before popping up mic permission
+    _initSpeech();
+  }
+
+  Future<void> _initSpeech() async {
+    _speechEnabled = await _speechToText.initialize(
+      onStatus: (val) {
+        if (mounted && (val == 'done' || val == 'notListening')) {
+          if (_isListening) {
+            setState(() => _isListening = false);
+            if (_searchController.text.isNotEmpty) {
+              _autoSearchAndSelect(_searchController.text);
+            }
+          }
+        }
+      },
+      onError: (val) {
+        if (mounted) setState(() => _isListening = false);
+      },
+    );
+
+    if (widget.startListening && _speechEnabled) {
       Future.delayed(const Duration(milliseconds: 300), () {
         if (mounted) _listen();
       });
@@ -53,53 +72,41 @@ class _SearchViewScreenState extends State<SearchViewScreen> {
   }
 
   void _listen() async {
-    if (!_isListening) {
-      bool available = await _speechToText.initialize(
-        onStatus: (val) {
-          if (val == 'done' || val == 'notListening') {
-            if (_isListening) {
-              setState(() => _isListening = false);
-              if (_searchController.text.isNotEmpty) {
-                _autoSearchAndSelect(_searchController.text);
-              }
-            }
-          }
-        },
-        onError: (val) => setState(() => _isListening = false),
-      );
-      if (available) {
-        setState(() => _isListening = true);
-        
-        // Initial timer: if the user says nothing at all for 4 seconds, we stop.
-        _silenceTimer?.cancel();
-        _silenceTimer = Timer(const Duration(seconds: 4), () {
-          if (_isListening) {
-            _speechToText.stop();
-          }
-        });
+    if (!_isListening && _speechEnabled) {
+      setState(() {
+        _isListening = true;
+        _searchController.clear();
+      });
+      
+      _silenceTimer?.cancel();
+      _silenceTimer = Timer(const Duration(seconds: 4), _stopAndSearch);
 
-        _speechToText.listen(
-          onResult: (val) {
+      _speechToText.listen(
+        onResult: (val) {
+          if (mounted) {
             setState(() {
               _searchController.text = val.recognizedWords;
             });
+            
+            // Reset silence timer on every new word
+            _silenceTimer?.cancel();
             if (val.finalResult) {
-              if (_isListening) {
-                _speechToText.stop();
-              }
+              _stopAndSearch();
             } else {
-              _silenceTimer?.cancel();
-              _silenceTimer = Timer(const Duration(seconds: 2), () {
-                if (_isListening) {
-                  _speechToText.stop();
-                }
-              });
+              _silenceTimer = Timer(const Duration(seconds: 2), _stopAndSearch);
             }
-          },
-          localeId: 'fr_FR',
-        );
-      }
-    } else {
+          }
+        },
+        localeId: 'fr_FR',
+      );
+    } else if (_isListening) {
+      _stopAndSearch();
+    }
+  }
+
+  void _stopAndSearch() {
+    _silenceTimer?.cancel();
+    if (_isListening) {
       setState(() => _isListening = false);
       _speechToText.stop();
       if (_searchController.text.isNotEmpty) {

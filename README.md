@@ -40,6 +40,7 @@ Le projet inclut une infrastructure de production complète :
 ## 🛠 Comment lancer le projet en local
 
 ### 1. Lancer l'API (Go)
+
 Assurez-vous d'avoir Go installé sur votre machine.
 ```bash
 cd api
