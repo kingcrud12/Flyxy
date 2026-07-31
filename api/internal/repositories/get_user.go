@@ -19,3 +19,7 @@ func (r *SQLiteUserRepository) GetUserByID(id string) (*models.User, bool) {
 	}
 	return &user, true
 }
+
+func (r *SQLiteUserRepository) UpdateUser(user *models.User) error {
+	return r.db.Save(user).Error
+}

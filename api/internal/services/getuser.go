@@ -13,10 +13,11 @@ func (s *DefaultUserService) GetProfile(userID string) (*dto.UserProfileDTO, err
 	
 	// Mapping du Model vers le DTO (Data Transfer Object)
 	result := &dto.UserProfileDTO{
-		ID:        user.ID,
-		Email:     user.Email,
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
+		ID:             user.ID,
+		Email:          user.Email,
+		FirstName:      user.FirstName,
+		LastName:       user.LastName,
+		ProfilePicture: user.ProfilePicture,
 	}
 	
 	return result, nil

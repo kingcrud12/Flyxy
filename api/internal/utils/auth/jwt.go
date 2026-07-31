@@ -9,6 +9,8 @@ import (
 
 var jwtKey = []byte(os.Getenv("JWT_SECRET"))
 
+const CookieName = "flyxy_jwt"
+
 type Claims struct {
 	UserID string `json:"user_id"`
 	jwt.RegisteredClaims

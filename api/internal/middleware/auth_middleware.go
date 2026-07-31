@@ -11,7 +11,7 @@ import (
 // AuthRequired intercepte les requêtes pour valider le token JWT depuis le cookie HttpOnly
 func AuthRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		tokenString, err := c.Cookie("flyxy_jwt")
+		tokenString, err := c.Cookie(auth.CookieName)
 		if err != nil || tokenString == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Non authentifié (Cookie manquant)"})
 			c.Abort()
@@ -27,6 +27,20 @@ func AuthRequired() gin.HandlerFunc {
 
 		// Injecte l'ID utilisateur dans le contexte pour qu'il soit accessible par les Handlers
 		c.Set("user_id", claims.UserID)
+		c.Next()
+	}
+}
+
+// AuthOptional vérifie le token s'il est présent mais ne bloque pas la requête s'il est absent.
+func AuthOptional() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tokenString, err := c.Cookie(auth.CookieName)
+		if err == nil && tokenString != "" {
+			claims, err := auth.VerifyToken(tokenString)
+			if err == nil {
+				c.Set("user_id", claims.UserID)
+			}
+		}
 		c.Next()
 	}
 }

@@ -20,14 +20,26 @@ class AuthViewModel extends ChangeNotifier {
   String _lastName = "";
   String get lastName => _lastName;
 
+  String _email = "";
+  String get email => _email;
+
+  String _userId = "";
+  String get userId => _userId;
+
+  String _profilePicture = "";
+  String get profilePicture => _profilePicture;
+
   Future<bool> login(String email, String password) async {
     _setLoading(true);
     _error = null;
     try {
       await _authService.login(email, password);
       final profile = await _authService.getMe();
-      _firstName = profile['first_name'];
-      _lastName = profile['last_name'];
+      _firstName = profile['first_name'] ?? '';
+      _lastName = profile['last_name'] ?? '';
+      _email = profile['email'] ?? email;
+      _profilePicture = profile['profile_picture'] ?? '';
+      _userId = profile['id'] ?? '';
       _isAuthenticated = true;
       _setLoading(false);
       return true;
@@ -48,6 +60,24 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
+  Future<void> checkAuthStatus() async {
+    _setLoading(true);
+    try {
+      final profile = await _authService.getMe();
+      _firstName = profile['first_name'] ?? '';
+      _lastName = profile['last_name'] ?? '';
+      _email = profile['email'] ?? '';
+      _profilePicture = profile['profile_picture'] ?? '';
+      _userId = profile['id'] ?? '';
+      _isAuthenticated = true;
+    } catch (e) {
+      _isAuthenticated = false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+
   Future<bool> register(String firstName, String lastName, String email, String password) async {
     _setLoading(true);
     _error = null;
@@ -66,8 +96,20 @@ class AuthViewModel extends ChangeNotifier {
     _isAuthenticated = false;
     _firstName = "";
     _lastName = "";
+    _email = "";
+    _profilePicture = "";
     // Dans l'idéal, il faudrait appeler une route /logout pour vider le cookie HttpOnly
     notifyListeners();
+  }
+
+  Future<void> uploadProfilePicture(dynamic file) async {
+    try {
+      final newUrl = await _authService.uploadAvatar(file);
+      _profilePicture = newUrl;
+      notifyListeners();
+    } catch (e) {
+      throw Exception("Erreur lors de l'upload: $e");
+    }
   }
 
   void _setLoading(bool value) {

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"flyxy-api/internal/dto"
+	"flyxy-api/internal/utils/auth"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,7 +22,7 @@ func (h *UserHandler) Login(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("flyxy_jwt", token, 604800, "/", "", false, true)
+	c.SetCookie(auth.CookieName, token, 604800, "/", "", false, true)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Connexion réussie"})
 }

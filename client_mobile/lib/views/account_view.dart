@@ -1,59 +1,307 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
+import '../viewmodels/auth_viewmodel.dart';
+import '../viewmodels/favorites_viewmodel.dart';
+import '../services/transport_service.dart';
+import 'dart:io';
+import 'itinerary_results_view.dart';
 
-class AccountView extends StatelessWidget {
+class AccountView extends StatefulWidget {
   final String firstName;
   final String lastName;
+  final String email;
   final VoidCallback onLogout;
 
-  const AccountView({super.key, required this.firstName, required this.lastName, required this.onLogout});
+  const AccountView({
+    super.key,
+    required this.firstName,
+    required this.lastName,
+    required this.email,
+    required this.onLogout,
+  });
+
+  @override
+  State<AccountView> createState() => _AccountViewState();
+}
+
+class _AccountViewState extends State<AccountView> {
+  final ImagePicker _picker = ImagePicker();
+  bool _isUploading = false;
+
+  Future<void> _pickAndUploadImage(BuildContext context) async {
+    try {
+      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        setState(() {
+          _isUploading = true;
+        });
+        
+        final authViewModel = context.read<AuthViewModel>();
+        await authViewModel.uploadProfilePicture(File(image.path));
+        
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Photo de profil mise à jour !')),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur: $e')),
+        );
+      }
+    } finally {
+      setState(() {
+        _isUploading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final authViewModel = context.watch<AuthViewModel>();
+    final profilePic = authViewModel.profilePicture;
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text('Mon Compte'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text('Mon Compte', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         actions: [
-          IconButton(icon: const Icon(Icons.logout), onPressed: onLogout),
+          IconButton(icon: const Icon(Icons.logout, color: Colors.white), onPressed: widget.onLogout),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const CircleAvatar(
-              radius: 40,
-              backgroundColor: Colors.amber,
-              child: Icon(Icons.person, size: 40, color: Colors.black),
-            ),
-            const SizedBox(height: 16),
-            Text('$firstName $lastName', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
-            const SizedBox(height: 32),
-            const Text('Lieux favoris', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-            const SizedBox(height: 8),
-            Card(
-              color: Colors.white12,
-              child: ListTile(
-                leading: const Icon(Icons.home, color: Colors.amber),
-                title: const Text('Maison'),
-                subtitle: const Text('Gare du Nord'),
-                trailing: IconButton(icon: const Icon(Icons.delete_outline), onPressed: () {}),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const SizedBox(height: 40),
+              // User Profile Section
+              Center(
+                child: Column(
+                  children: [
+                    GestureDetector(
+                      onTap: () => _pickAndUploadImage(context),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          CircleAvatar(
+                            radius: 60,
+                            backgroundColor: Colors.amber,
+                            backgroundImage: profilePic.isNotEmpty
+                                ? NetworkImage(profilePic)
+                                : null,
+                            child: profilePic.isEmpty
+                                ? const Icon(Icons.person, size: 60, color: Colors.black)
+                                : null,
+                          ),
+                          if (_isUploading)
+                            const CircularProgressIndicator(color: Colors.white),
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: const BoxDecoration(
+                                color: Colors.blueAccent,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      '${widget.firstName} ${widget.lastName}',
+                      style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      widget.email,
+                      style: TextStyle(fontSize: 16, color: Colors.white.withValues(alpha: 0.7)),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
-            const Text('Itinéraires favoris', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-            const SizedBox(height: 8),
-            Card(
-              color: Colors.white12,
-              child: ListTile(
-                leading: const Icon(Icons.directions_transit, color: Colors.blueAccent),
-                title: const Text('Travail'),
-                subtitle: const Text('Châtelet -> La Défense'),
-                trailing: IconButton(icon: const Icon(Icons.delete_outline), onPressed: () {}),
+              const SizedBox(height: 32),
+              
+              // Favorites Section
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text('Lieux Favoris', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              Consumer<FavoritesViewModel>(
+                builder: (context, favoritesVm, child) {
+                  if (favoritesVm.isLoading) {
+                    return const CircularProgressIndicator(color: Colors.white);
+                  }
+                  if (favoritesVm.places.isEmpty) {
+                    return const Text('Aucun lieu favori', style: TextStyle(color: Colors.white70));
+                  }
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: favoritesVm.places.length,
+                    itemBuilder: (context, index) {
+                      final place = favoritesVm.places[index];
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.white.withOpacity(0.2)),
+                        ),
+                        child: ListTile(
+                          onTap: () async {
+                            try {
+                              final results = await TransportService().searchPlaces(place['name']);
+                              if (results.isNotEmpty) {
+                                final first = results.first;
+                                double? lat;
+                                double? lon;
+                                if (first['lat'] != null && first['lon'] != null) {
+                                  lat = (first['lat'] as num).toDouble();
+                                  lon = (first['lon'] as num).toDouble();
+                                }
+                                if (context.mounted) {
+                                  context.go('/map', extra: {
+                                    'lat': lat,
+                                    'lon': lon,
+                                    'stopId': place['stop_area_id'],
+                                  });
+                                }
+                              } else {
+                                if (context.mounted) {
+                                  context.go('/map', extra: {'stopId': place['stop_area_id']});
+                                }
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                context.go('/map', extra: {'stopId': place['stop_area_id']});
+                              }
+                            }
+                          },
+                          leading: const Icon(Icons.star, color: Colors.amber),
+                          title: Text(place['name'] ?? '', style: const TextStyle(color: Colors.white)),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.white54),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  backgroundColor: const Color(0xFF2C2C2E),
+                                  title: const Text('Supprimer le favori', style: TextStyle(color: Colors.white)),
+                                  content: const Text('Voulez-vous vraiment supprimer ce lieu favori ?', style: TextStyle(color: Colors.white70)),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx),
+                                      child: const Text('Annuler', style: TextStyle(color: Colors.white)),
+                                    ),
+                                    TextButton(
+                                      onPressed: () async {
+                                        await context.read<FavoritesViewModel>().deleteFavoritePlace(place['id']);
+                                        if (ctx.mounted) Navigator.pop(ctx);
+                                      },
+                                      child: const Text('Supprimer', style: TextStyle(color: Colors.redAccent)),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text('Itinéraires Favoris', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(height: 16),
+              Consumer<FavoritesViewModel>(
+                builder: (context, favoritesVm, child) {
+                  if (favoritesVm.isLoading) {
+                    return const CircularProgressIndicator(color: Colors.white);
+                  }
+                  if (favoritesVm.routes.isEmpty) {
+                    return const Text('Aucun itinéraire favori', style: TextStyle(color: Colors.white70));
+                  }
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: favoritesVm.routes.length,
+                    itemBuilder: (context, index) {
+                      final route = favoritesVm.routes[index];
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.white.withOpacity(0.2)),
+                        ),
+                        child: ListTile(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ItineraryResultsView(
+                                  fromId: route['from_stop_id'] ?? '',
+                                  toId: route['to_stop_id'] ?? '',
+                                  toName: route['name'] ?? 'Itinéraire',
+                                ),
+                              ),
+                            );
+                          },
+                          leading: const Icon(Icons.directions, color: Colors.blueAccent),
+                          title: Text(route['name'] ?? '', style: const TextStyle(color: Colors.white)),
+                          subtitle: const Text('Itinéraire favori', style: TextStyle(color: Colors.white70)),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.white54),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  backgroundColor: const Color(0xFF2C2C2E),
+                                  title: const Text('Supprimer le favori', style: TextStyle(color: Colors.white)),
+                                  content: const Text('Voulez-vous vraiment supprimer cet itinéraire favori ?', style: TextStyle(color: Colors.white70)),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx),
+                                      child: const Text('Annuler', style: TextStyle(color: Colors.white)),
+                                    ),
+                                    TextButton(
+                                      onPressed: () async {
+                                        await context.read<FavoritesViewModel>().deleteFavoriteRoute(route['id']);
+                                        if (ctx.mounted) Navigator.pop(ctx);
+                                      },
+                                      child: const Text('Supprimer', style: TextStyle(color: Colors.redAccent)),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+              const SizedBox(height: 100), // Bottom padding for navigation bar
+            ],
+          ),
         ),
       ),
     );

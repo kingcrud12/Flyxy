@@ -23,11 +23,15 @@ func InitDB(dsn string) *gorm.DB {
 		&models.User{},
 		&models.FavoritePlace{},
 		&models.FavoriteRoute{},
+		&models.Post{},
+		&models.Comment{},
+		&models.PostLike{},
+		&models.CommentLike{},
 	)
 	if err != nil {
 		log.Fatalf("Échec de l'auto-migration : %v", err)
 	}
 
-	log.Println("✅ Tables GORM migrées avec succès.")
+	log.Println("✅  Vérification du schéma GORM terminée avec succès.")
 	return db
 }

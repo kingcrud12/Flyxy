@@ -12,6 +12,7 @@ type FavoritePlace struct {
 	ID         string         `gorm:"primaryKey;type:varchar(36)" json:"id"`
 	UserID     string         `gorm:"index;not null;type:varchar(36)" json:"user_id"`
 	Name       string         `gorm:"not null" json:"name"`         // ex: "Maison"
+	IconName   string         `gorm:"type:varchar(50)" json:"icon_name"`
 	StopAreaID string         `gorm:"not null" json:"stop_area_id"` // ex: "stop_area:IDFM:71556"
 	CreatedAt  time.Time      `json:"created_at"`
 	UpdatedAt  time.Time      `json:"updated_at"`

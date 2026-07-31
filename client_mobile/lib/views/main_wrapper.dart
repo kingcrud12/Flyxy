@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'chat_modal.dart';
 
 class MainWrapper extends StatefulWidget {
   final StatefulNavigationShell navigationShell;
@@ -57,12 +58,28 @@ class _MainWrapperState extends State<MainWrapper> {
           widget.navigationShell,
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (context) => Padding(
+              padding: EdgeInsets.only(top: MediaQuery.of(context).size.height * 0.2),
+              child: const ChatModal(),
+            ),
+          );
+        },
+        backgroundColor: Colors.blueAccent,
+        elevation: 8,
+        child: const Icon(Icons.auto_awesome, color: Colors.white),
+      ),
       bottomNavigationBar: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
           child: Container(
-            color: Colors.black.withOpacity(0.3), // Liquid glass
+            color: Colors.black.withOpacity(0.85), // Plus opaque pour lisibilité sur la carte
             child: BottomNavigationBar(
               backgroundColor: Colors.transparent, // Transparent pour voir le glass
               type: BottomNavigationBarType.fixed,
@@ -71,19 +88,16 @@ class _MainWrapperState extends State<MainWrapper> {
               unselectedItemColor: Colors.grey,
               currentIndex: widget.navigationShell.currentIndex,
               onTap: (index) {
-                // Seulement si on a géré les routes dans les branches
-                if (index == 0 || index == 3) {
-                  widget.navigationShell.goBranch(
-                    index == 0 ? 0 : 1,
-                    initialLocation: index == widget.navigationShell.currentIndex,
-                  );
-                }
+                widget.navigationShell.goBranch(
+                  index,
+                  initialLocation: index == widget.navigationShell.currentIndex,
+                );
               },
               items: const [
-                BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-                BottomNavigationBarItem(icon: Icon(Icons.favorite_border), label: 'Saved'),
-                BottomNavigationBarItem(icon: Icon(Icons.notifications_none), label: 'Alerts'),
-                BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Profile'),
+                BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Accueil'),
+                BottomNavigationBarItem(icon: Icon(Icons.favorite_border), label: 'Favoris'),
+                BottomNavigationBarItem(icon: Icon(Icons.info_outline), label: 'Communauté'),
+                BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Profil'),
               ],
             ),
           ),

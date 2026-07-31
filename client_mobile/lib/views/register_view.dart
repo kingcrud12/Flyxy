@@ -30,10 +30,17 @@ class _RegisterViewState extends State<RegisterView> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthViewModel>();
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(title: const Text('Inscription')),
-      body: Padding(
+    return Container(
+      decoration: const BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage('assets/bg.jpg'),
+          fit: BoxFit.cover,
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(title: const Text('Inscription')),
+        body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -89,6 +96,6 @@ class _RegisterViewState extends State<RegisterView> {
           ],
         ),
       ),
-    );
+    ));
   }
 }

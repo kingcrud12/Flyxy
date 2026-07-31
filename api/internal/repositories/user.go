@@ -10,6 +10,7 @@ type UserRepository interface {
 	CreateUser(user *models.User) error
 	GetUserByEmail(email string) (*models.User, bool)
 	GetUserByID(id string) (*models.User, bool)
+	UpdateUser(user *models.User) error
 }
 
 // SQLiteUserRepository implémente UserRepository pour SQLite via GORM

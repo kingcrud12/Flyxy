@@ -1,0 +1,42 @@
+name: CD – Deploy API to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Build & Deploy Backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy Backend via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          port: ${{ secrets.VPS_PORT }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -e
+
+            # ── 1. Mettre à jour le code backend sur le VPS ─────────────
+            cd ${{ secrets.PROJECT_PATH }}
+            git fetch origin main
+            git reset --hard origin/main
+            
+            # On supprime les fichiers non suivis, mais on préserve le fichier .env de l'API
+            git clean -fd -e "api/.env" || true
+
+            # ── 2. Backend : build Go ───────────────────────────────────
+            cd api
+            
+            # Télécharge les éventuelles nouvelles dépendances
+            go mod tidy
+            
+            # Compile le binaire Go
+            go build -o server main.go
+            
+            # Redémarre l'API avec PM2
+            pm2 restart flyxy-api

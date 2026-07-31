@@ -7,15 +7,18 @@ import (
 	"os"
 )
 
-const BaseURL = "https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia"
-
 func TestConnection() (string, error) {
+	baseURL := os.Getenv("PRIM_BASE_URL")
+	if baseURL == "" {
+		baseURL = "https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia"
+	}
+
 	token := os.Getenv("token_prim")
 	if token == "" {
 		return "", fmt.Errorf("token PRIM non trouvé")
 	}
 
-	url := fmt.Sprintf("%s/places?q=chatelet", BaseURL)
+	url := fmt.Sprintf("%s/places?q=chatelet", baseURL)
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {

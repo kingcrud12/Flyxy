@@ -56,8 +56,13 @@ class _LoginViewState extends State<LoginView> {
               height: 50,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).primaryColor),
-                onPressed: auth.isLoading ? null : () {
-                  auth.login(_emailController.text, _passwordController.text);
+                onPressed: auth.isLoading ? null : () async {
+                  final success = await auth.login(_emailController.text, _passwordController.text);
+                  if (success && context.mounted) {
+                    if (Navigator.canPop(context)) {
+                      Navigator.pop(context);
+                    }
+                  }
                 },
                 child: auth.isLoading
                     ? const CircularProgressIndicator(color: Colors.black)

@@ -19,11 +19,28 @@ func (h *UserHandler) GetMe(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message":    "Profil récupéré avec succès",
-		"id":         profile.ID,
-		"email":      profile.Email,
-		"first_name": profile.FirstName,
-		"last_name":  profile.LastName,
-	})
+	c.JSON(http.StatusOK, profile)
+}
+
+func (h *UserHandler) UploadAvatar(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Non autorisé"})
+		return
+	}
+
+	file, _, err := c.Request.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Fichier image manquant"})
+		return
+	}
+	defer file.Close()
+
+	url, err := h.userService.UpdateAvatar(userID.(string), file)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"url": url})
 }
