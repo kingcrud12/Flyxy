@@ -39,6 +39,9 @@ class _MainWrapperState extends State<MainWrapper> {
 
   @override
   Widget build(BuildContext context) {
+    final String location = GoRouterState.of(context).uri.path;
+    final bool isMap = location.contains('/map');
+    
     return Scaffold(
       extendBody: true,
       body: Stack(
@@ -79,7 +82,7 @@ class _MainWrapperState extends State<MainWrapper> {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
           child: Container(
-            color: Colors.black.withOpacity(0.85), // Plus opaque pour lisibilité sur la carte
+            color: Colors.black.withOpacity(isMap ? 0.85 : 0.2), // Opaque sur la carte, Glass ailleurs
             child: BottomNavigationBar(
               backgroundColor: Colors.transparent, // Transparent pour voir le glass
               type: BottomNavigationBarType.fixed,

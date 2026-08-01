@@ -57,7 +57,7 @@ class TransportViewModel extends ChangeNotifier {
       // Si aucune position en cache, on fait une requête très rapide et basse précision (antennes/wifi)
       if (position == null) {
         position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.low,
+          desiredAccuracy: LocationAccuracy.high,
           timeLimit: const Duration(seconds: 5),
         );
       }
