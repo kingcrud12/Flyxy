@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:provider/provider.dart';
 import '../viewmodels/auth_viewmodel.dart';
@@ -75,7 +76,32 @@ class _LoginViewState extends State<LoginView> {
                 context.push('/register');
               },
               child: const Text('Pas encore de compte ? S\'inscrire'),
-            )
+            ),
+            const SizedBox(height: 32),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TextButton(
+                  onPressed: () async {
+                    final url = Uri.parse('https://flyxy.fr/politique-confidentialite');
+                    if (await canLaunchUrl(url)) {
+                      await launchUrl(url, mode: LaunchMode.externalApplication);
+                    }
+                  },
+                  child: const Text('Confidentialité'),
+                ),
+                const Text('|', style: TextStyle(color: Colors.grey)),
+                TextButton(
+                  onPressed: () async {
+                    final url = Uri.parse('https://flyxy.fr/mentions-legales');
+                    if (await canLaunchUrl(url)) {
+                      await launchUrl(url, mode: LaunchMode.externalApplication);
+                    }
+                  },
+                  child: const Text('Mentions légales'),
+                ),
+              ],
+            ),
           ],
         ),
       ),

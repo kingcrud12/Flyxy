@@ -116,4 +116,19 @@ class AuthViewModel extends ChangeNotifier {
     _isLoading = value;
     notifyListeners();
   }
+
+  Future<bool> deleteAccount() async {
+    _setLoading(true);
+    _error = null;
+    try {
+      await _authService.deleteAccount();
+      logout();
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _error = "Erreur lors de la suppression du compte";
+      _setLoading(false);
+      return false;
+    }
+  }
 }

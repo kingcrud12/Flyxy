@@ -90,6 +90,7 @@ func main() {
 		protected.Use(middleware.AuthRequired())
 		{
 			protected.GET("/me", userHandler.GetMe)
+			protected.DELETE("/users/me", userHandler.DeleteMe)
 			protected.POST("/users/me/avatar", userHandler.UploadAvatar)
 
 			protected.POST("/favorites/places", favoritesHandler.AddFavoritePlace)

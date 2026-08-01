@@ -13,6 +13,7 @@ type UserService interface {
 	Login(req dto.LoginDTO) (string, error)
 	GetProfile(userID string) (*dto.UserProfileDTO, error)
 	UpdateAvatar(userID string, file multipart.File) (string, error)
+	DeleteUser(userID string) error
 }
 
 type DefaultUserService struct {
@@ -38,4 +39,8 @@ func (s *DefaultUserService) UpdateAvatar(userID string, file multipart.File) (s
 	// Assuming there's an UpdateUser method, if not I need to add it to UserRepository.
 	// Actually wait, let's look at UserRepository.
 	return url, s.repo.UpdateUser(user)
+}
+
+func (s *DefaultUserService) DeleteUser(userID string) error {
+	return s.repo.DeleteUser(userID)
 }

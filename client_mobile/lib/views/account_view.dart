@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
@@ -299,6 +300,108 @@ class _AccountViewState extends State<AccountView> {
                   );
                 },
               ),
+              const SizedBox(height: 32),
+              
+              // Légal Section
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text('Légal', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white.withOpacity(0.2)),
+                ),
+                child: ListTile(
+                  onTap: () async {
+                    final url = Uri.parse('https://flyxy.fr/politique-confidentialite');
+                    if (await canLaunchUrl(url)) {
+                      await launchUrl(url, mode: LaunchMode.externalApplication);
+                    }
+                  },
+                  leading: const Icon(Icons.privacy_tip, color: Colors.blueAccent),
+                  title: const Text('Voir la politique de confidentialité', style: TextStyle(color: Colors.white)),
+                  trailing: const Icon(Icons.arrow_forward_ios, color: Colors.white54, size: 16),
+                ),
+              ),
+              Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white.withOpacity(0.2)),
+                ),
+                child: ListTile(
+                  onTap: () async {
+                    final url = Uri.parse('https://flyxy.fr/mentions-legales');
+                    if (await canLaunchUrl(url)) {
+                      await launchUrl(url, mode: LaunchMode.externalApplication);
+                    }
+                  },
+                  leading: const Icon(Icons.gavel, color: Colors.orangeAccent),
+                  title: const Text('Voir les mentions légales', style: TextStyle(color: Colors.white)),
+                  trailing: const Icon(Icons.arrow_forward_ios, color: Colors.white54, size: 16),
+                ),
+              ),
+              const SizedBox(height: 32),
+
+              // Danger Zone
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text('Danger', style: TextStyle(color: Colors.redAccent, fontSize: 20, fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  color: Colors.redAccent.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.redAccent.withOpacity(0.3)),
+                ),
+                child: ListTile(
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        backgroundColor: const Color(0xFF2C2C2E),
+                        title: const Text('Supprimer mon compte', style: TextStyle(color: Colors.white)),
+                        content: const Text(
+                          'Voulez-vous vraiment supprimer votre compte ? Cette action est irréversible et toutes vos données (posts, favoris...) seront définitivement effacées.',
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            child: const Text('Annuler', style: TextStyle(color: Colors.white)),
+                          ),
+                          TextButton(
+                            onPressed: () async {
+                              final authVm = context.read<AuthViewModel>();
+                              final success = await authVm.deleteAccount();
+                              if (success && ctx.mounted) {
+                                Navigator.pop(ctx);
+                                context.go('/login');
+                              } else if (ctx.mounted) {
+                                Navigator.pop(ctx);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Erreur lors de la suppression')),
+                                );
+                              }
+                            },
+                            child: const Text('Supprimer définitivement', style: TextStyle(color: Colors.redAccent)),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                  leading: const Icon(Icons.delete_forever, color: Colors.redAccent),
+                  title: const Text('Supprimer mon compte', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                ),
+              ),
+
               const SizedBox(height: 100), // Bottom padding for navigation bar
             ],
           ),

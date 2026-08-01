@@ -38,4 +38,8 @@ class AuthService {
     final response = await _dio.post('users/me/avatar', data: formData);
     return response.data['url'];
   }
+
+  Future<void> deleteAccount() async {
+    await _dio.delete('users/me');
+  }
 }

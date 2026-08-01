@@ -13,7 +13,7 @@ class DioClient {
 
   DioClient._internal() {
     dio = Dio(BaseOptions(
-      baseUrl: const String.fromEnvironment('API_URL', defaultValue: 'http://127.0.0.1:8081/api/v1/'),
+      baseUrl: const String.fromEnvironment('API_URL', defaultValue: 'http://127.0.0.1:8083/api/v1/'),
       connectTimeout: const Duration(seconds: 15),
       receiveTimeout: const Duration(seconds: 60),
     ));
