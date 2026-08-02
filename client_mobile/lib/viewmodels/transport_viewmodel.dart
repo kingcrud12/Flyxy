@@ -51,16 +51,24 @@ class TransportViewModel extends ChangeNotifier {
         return;
       }
 
-      // Approche type "Transit" : on utilise d'abord la dernière position connue (instantané)
-      Position? position = await Geolocator.getLastKnownPosition();
-      
-      // Si aucune position en cache, on fait une requête très rapide et basse précision (antennes/wifi)
-      if (position == null) {
+      // On essaie d'abord d'obtenir la position actuelle réelle
+      Position? position;
+      try {
         position = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high,
           timeLimit: const Duration(seconds: 5),
         );
+      } catch (e) {
+        // En cas de timeout ou d'erreur, on se rabat sur la dernière position connue
+        position = await Geolocator.getLastKnownPosition();
       }
+
+      if (position == null) {
+        _error = "Impossible de récupérer votre position.";
+        _setLoading(false);
+        return;
+      }
+      
       _currentPosition = position;
       
       _departures = await _transportService.getNearbyDepartures(

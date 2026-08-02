@@ -238,8 +238,8 @@ func (r *PrimTransportRepository) GetDisruptions(lat, lon float64) (*dto.Navitia
 	}
 
 	// L'API PRIM/Navitia ne supporte pas /coords/.../disruptions directement.
-	// On requête donc la région globale avec count=10 pour satisfaire le besoin sans erreur 400/404.
-	url := fmt.Sprintf("%s/disruptions?count=10", r.BaseURL)
+	// On requête donc la région globale avec count=1000 pour être sûr de récupérer les perturbations des RER qui peuvent être noyées.
+	url := fmt.Sprintf("%s/disruptions?count=1000", r.BaseURL)
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {

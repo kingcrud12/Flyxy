@@ -57,7 +57,7 @@ func (r *SQLitePostRepository) CreatePost(post *models.Post) error {
 
 func (r *SQLitePostRepository) GetPosts() ([]models.Post, error) {
 	var posts []models.Post
-	err := r.db.Preload("User").Order("created_at desc").Find(&posts).Error
+	err := r.db.Preload("User").Preload("Comments").Order("created_at desc").Find(&posts).Error
 	return posts, err
 }
 

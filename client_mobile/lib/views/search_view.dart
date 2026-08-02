@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
+import 'dart:io' show Platform;
 import 'dart:async';
 import 'package:geolocator/geolocator.dart';
 import '../services/transport_service.dart';
@@ -188,7 +189,10 @@ class _SearchViewScreenState extends State<SearchViewScreen> {
         children: [
           Positioned.fill(
             child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+              filter: ImageFilter.blur(
+                sigmaX: Platform.isAndroid ? 5 : 20, 
+                sigmaY: Platform.isAndroid ? 5 : 20
+              ),
               child: Container(
                 color: Colors.black.withValues(alpha: 0.4),
               ),

@@ -12,6 +12,7 @@ import '../views/feed_view.dart';
 import '../views/create_post_view.dart';
 import '../views/post_details_view.dart';
 import '../viewmodels/auth_viewmodel.dart';
+import '../viewmodels/favorites_viewmodel.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/',
@@ -99,6 +100,7 @@ class ProfileWrapper extends StatelessWidget {
         email: auth.email,
         onLogout: () {
           context.read<AuthViewModel>().logout();
+          context.read<FavoritesViewModel>().clearFavorites();
         },
       );
     }

@@ -2,8 +2,10 @@ package services
 
 import (
 	"fmt"
+	"regexp"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"flyxy-api/internal/dto"
@@ -381,7 +383,104 @@ func (s *DefaultTransportService) GetDisruptions(lat, lon float64) ([]dto.Naviti
 	if err != nil {
 		return nil, err
 	}
-	return resp.Disruptions, nil
+	
+	var filtered []dto.NavitiaDisruption
+
+	// Filtrer et préfixer le message avec la ligne impactée
+	for i := range resp.Disruptions {
+		d := &resp.Disruptions[i]
+
+		// Ignorer les pannes mineures (ascenseurs, etc.)
+		if d.Severity.Effect == "OTHER_EFFECT" || d.Severity.Effect == "UNKNOWN_EFFECT" {
+			continue
+		}
+
+		if len(d.Messages) > 0 {
+			lineName := ""
+			for _, io := range d.ImpactedObjects {
+				if io.PtObject.Line != nil {
+					net := io.PtObject.Line.Network.Name
+					code := io.PtObject.Line.Code
+					if net != "" && code != "" {
+						lineName = fmt.Sprintf("[%s %s]", net, code)
+					} else if io.PtObject.Line.Name != "" {
+						lineName = fmt.Sprintf("[%s]", io.PtObject.Line.Name)
+					}
+					break
+				}
+			}
+
+			// On ignore les perturbations qui n'ont pas de ligne bien définie
+			if lineName == "" {
+				continue
+			}
+
+			var bestText string
+			for _, m := range d.Messages {
+				if len(m.Text) > len(bestText) {
+					bestText = m.Text
+				}
+			}
+
+			// Nettoyer les tags HTML (ex: <br>, <p>, <a>)
+			re := regexp.MustCompile(`<[^>]*>`)
+			cleanText := re.ReplaceAllString(bestText, " ")
+			// Nettoyer les espaces multiples
+			cleanText = strings.Join(strings.Fields(cleanText), " ")
+
+			// Limiter la taille du texte pour ne pas exploser le token count (max 400 chars)
+			if len(cleanText) > 400 {
+				cleanText = cleanText[:397] + "..."
+			}
+
+			d.Messages[0].Text = lineName + " " + cleanText
+		}
+
+		filtered = append(filtered, *d)
+	}
+
+	// Définition de la priorité : RER (1) > Metro (2) > Tram (3) > Bus (4) > Autres (5)
+	getPriority := func(text string) int {
+		upperText := strings.ToUpper(text)
+		if strings.Contains(upperText, "[RER") {
+			return 1
+		} else if strings.Contains(upperText, "[MÉTRO") || strings.Contains(upperText, "[METRO") {
+			return 2
+		} else if strings.Contains(upperText, "[TRAM") || strings.Contains(upperText, "[T") {
+			return 3
+		} else if strings.Contains(upperText, "[BUS") || strings.Contains(upperText, "[NOCTILIEN") {
+			return 4
+		}
+		return 5
+	}
+
+	// Tri des perturbations
+	sort.Slice(filtered, func(i, j int) bool {
+		textI := ""
+		if len(filtered[i].Messages) > 0 {
+			textI = filtered[i].Messages[0].Text
+		}
+		textJ := ""
+		if len(filtered[j].Messages) > 0 {
+			textJ = filtered[j].Messages[0].Text
+		}
+
+		pI := getPriority(textI)
+		pJ := getPriority(textJ)
+		
+		if pI == pJ {
+			// Si même réseau, on peut trier par l'ID ou le statut
+			return filtered[i].ID < filtered[j].ID
+		}
+		return pI < pJ
+	})
+
+	// Limiter aux 50 plus importantes
+	if len(filtered) > 50 {
+		filtered = filtered[:50]
+	}
+
+	return filtered, nil
 }
 
 func (s *DefaultTransportService) GetJourneys(from, to string) ([]dto.JourneyDTO, error) {

@@ -132,12 +132,13 @@ func (s *DefaultPostService) ToggleCommentLike(commentID, userID string) (bool, 
 
 func (s *DefaultPostService) mapPostToDTO(p models.Post, likedByMe bool) *dto.PostDTO {
 	return &dto.PostDTO{
-		ID:        p.ID,
-		Text:      p.Text,
-		ImageURL:  p.ImageURL,
-		Likes:     p.Likes,
-		LikedByMe: likedByMe,
-		CreatedAt: p.CreatedAt,
+		ID:            p.ID,
+		Text:          p.Text,
+		ImageURL:      p.ImageURL,
+		Likes:         p.Likes,
+		LikedByMe:     likedByMe,
+		CommentsCount: len(p.Comments),
+		CreatedAt:     p.CreatedAt,
 		User: dto.UserProfileDTO{
 			ID:             p.User.ID,
 			FirstName:      p.User.FirstName,

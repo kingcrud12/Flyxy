@@ -184,6 +184,7 @@ class _FeedViewScreenState extends State<FeedViewScreen> {
     final imageUrl = post['image_url'] ?? '';
     final text = post['text'] ?? '';
     final likes = post['likes'] ?? 0;
+    final commentsCount = post['comments_count'] ?? 0;
     final likedByMe = post['liked_by_me'] ?? false;
     final postId = post['id'];
 
@@ -228,23 +229,49 @@ class _FeedViewScreenState extends State<FeedViewScreen> {
                           } else if (value == 'delete') {
                             showDialog(
                               context: context,
-                              builder: (ctx) => AlertDialog(
-                                backgroundColor: const Color(0xFF2C2C2E),
-                                title: const Text('Supprimer le post', style: TextStyle(color: Colors.white)),
-                                content: const Text('Voulez-vous vraiment supprimer ce post ?', style: TextStyle(color: Colors.white70)),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(ctx),
-                                    child: const Text('Annuler', style: TextStyle(color: Colors.white)),
+                              builder: (ctx) => Dialog(
+                                backgroundColor: Colors.transparent,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(20),
+                                  child: BackdropFilter(
+                                    filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(24),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withValues(alpha: 0.5),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1.5),
+                                      ),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          const Text('Supprimer le post', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                                          const SizedBox(height: 16),
+                                          const Text('Voulez-vous vraiment supprimer ce post ?', style: TextStyle(color: Colors.white70)),
+                                          const SizedBox(height: 24),
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.end,
+                                            children: [
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(ctx),
+                                                child: const Text('Annuler', style: TextStyle(color: Colors.white)),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              TextButton(
+                                                onPressed: () {
+                                                  context.read<SocialViewModel>().deletePost(postId);
+                                                  Navigator.pop(ctx);
+                                                },
+                                                child: const Text('Supprimer', style: TextStyle(color: Colors.redAccent)),
+                                              ),
+                                            ],
+                                          )
+                                        ],
+                                      ),
+                                    ),
                                   ),
-                                  TextButton(
-                                    onPressed: () {
-                                      context.read<SocialViewModel>().deletePost(postId);
-                                      Navigator.pop(ctx);
-                                    },
-                                    child: const Text('Supprimer', style: TextStyle(color: Colors.redAccent)),
-                                  ),
-                                ],
+                                ),
                               ),
                             );
                           }
@@ -300,6 +327,7 @@ class _FeedViewScreenState extends State<FeedViewScreen> {
                         context.push('/post-details', extra: post);
                       },
                     ),
+                    Text('$commentsCount', style: const TextStyle(color: Colors.white)),
                   ],
                 )
               ],
@@ -315,35 +343,61 @@ class _FeedViewScreenState extends State<FeedViewScreen> {
     
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF2C2C2E),
-        title: const Text('Modifier le post', style: TextStyle(color: Colors.white)),
-        content: TextField(
-          controller: textController,
-          maxLines: 4,
-          style: const TextStyle(color: Colors.white),
-          decoration: const InputDecoration(
-            hintText: 'Quoi de neuf ?',
-            hintStyle: TextStyle(color: Colors.white54),
-            border: OutlineInputBorder(),
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1.5),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Modifier le post', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: textController,
+                    maxLines: 4,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
+                      hintText: 'Quoi de neuf ?',
+                      hintStyle: TextStyle(color: Colors.white54),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: const Text('Annuler', style: TextStyle(color: Colors.white)),
+                      ),
+                      const SizedBox(width: 8),
+                      TextButton(
+                        onPressed: () async {
+                          final newText = textController.text.trim();
+                          if (newText.isNotEmpty) {
+                            await context.read<SocialViewModel>().updatePost(post['id'], newText);
+                            if (ctx.mounted) Navigator.pop(ctx);
+                          }
+                        },
+                        child: const Text('Sauvegarder', style: TextStyle(color: Colors.blueAccent)),
+                      ),
+                    ],
+                  )
+                ],
+              ),
+            ),
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Annuler', style: TextStyle(color: Colors.white)),
-          ),
-          TextButton(
-            onPressed: () async {
-              final newText = textController.text.trim();
-              if (newText.isNotEmpty) {
-                await context.read<SocialViewModel>().updatePost(post['id'], newText);
-                if (ctx.mounted) Navigator.pop(ctx);
-              }
-            },
-            child: const Text('Sauvegarder', style: TextStyle(color: Colors.blueAccent)),
-          ),
-        ],
       ),
     );
   }

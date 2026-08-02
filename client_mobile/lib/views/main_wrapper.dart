@@ -78,11 +78,16 @@ class _MainWrapperState extends State<MainWrapper> {
         child: const Icon(Icons.auto_awesome, color: Colors.white),
       ),
       bottomNavigationBar: ClipRRect(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.zero,
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
           child: Container(
-            color: Colors.black.withOpacity(isMap ? 0.85 : 0.2), // Opaque sur la carte, Glass ailleurs
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: isMap ? 0.85 : 0.4),
+              border: Border(
+                top: BorderSide(color: Colors.white.withValues(alpha: 0.2), width: 1.0),
+              ),
+            ),
             child: BottomNavigationBar(
               backgroundColor: Colors.transparent, // Transparent pour voir le glass
               type: BottomNavigationBarType.fixed,
@@ -90,6 +95,8 @@ class _MainWrapperState extends State<MainWrapper> {
               selectedItemColor: Colors.white,
               unselectedItemColor: Colors.grey,
               currentIndex: widget.navigationShell.currentIndex,
+              showSelectedLabels: true,
+              showUnselectedLabels: true,
               onTap: (index) {
                 widget.navigationShell.goBranch(
                   index,

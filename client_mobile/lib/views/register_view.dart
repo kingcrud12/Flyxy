@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -85,7 +86,47 @@ class _RegisterViewState extends State<RegisterView> {
                     _passwordController.text,
                   );
                   if (success && context.mounted) {
-                    context.pop(); // Retourne au Login après inscription
+                    await showDialog(
+                      context: context,
+                      builder: (ctx) => Dialog(
+                        backgroundColor: Colors.transparent,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                            child: Container(
+                              padding: const EdgeInsets.all(24),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.5),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1.5),
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.check_circle, color: Colors.greenAccent, size: 64),
+                                  const SizedBox(height: 16),
+                                  const Text('Compte créé avec succès !', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                                  const SizedBox(height: 24),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).primaryColor),
+                                      onPressed: () => Navigator.pop(ctx),
+                                      child: const Text('OK', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                                    ),
+                                  )
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                    if (context.mounted) {
+                      context.pop(); // Retourne au Login après inscription
+                    }
                   }
                 },
                 child: auth.isLoading

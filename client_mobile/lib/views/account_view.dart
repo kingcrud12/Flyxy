@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -198,23 +199,49 @@ class _AccountViewState extends State<AccountView> {
                             onPressed: () {
                               showDialog(
                                 context: context,
-                                builder: (ctx) => AlertDialog(
-                                  backgroundColor: const Color(0xFF2C2C2E),
-                                  title: const Text('Supprimer le favori', style: TextStyle(color: Colors.white)),
-                                  content: const Text('Voulez-vous vraiment supprimer ce lieu favori ?', style: TextStyle(color: Colors.white70)),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(ctx),
-                                      child: const Text('Annuler', style: TextStyle(color: Colors.white)),
+                                builder: (ctx) => Dialog(
+                                  backgroundColor: Colors.transparent,
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(20),
+                                    child: BackdropFilter(
+                                      filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(24),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withValues(alpha: 0.5),
+                                          borderRadius: BorderRadius.circular(20),
+                                          border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1.5),
+                                        ),
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Text('Supprimer le favori', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                                            const SizedBox(height: 16),
+                                            const Text('Voulez-vous vraiment supprimer ce lieu favori ?', style: TextStyle(color: Colors.white70)),
+                                            const SizedBox(height: 24),
+                                            Wrap(
+                                              alignment: WrapAlignment.end,
+                                              spacing: 8,
+                                              children: [
+                                                TextButton(
+                                                  onPressed: () => Navigator.pop(ctx),
+                                                  child: const Text('Annuler', style: TextStyle(color: Colors.white)),
+                                                ),
+                                                TextButton(
+                                                  onPressed: () async {
+                                                    await context.read<FavoritesViewModel>().deleteFavoritePlace(place['id']);
+                                                    if (ctx.mounted) Navigator.pop(ctx);
+                                                  },
+                                                  child: const Text('Supprimer', style: TextStyle(color: Colors.redAccent)),
+                                                ),
+                                              ],
+                                            )
+                                          ],
+                                        ),
+                                      ),
                                     ),
-                                    TextButton(
-                                      onPressed: () async {
-                                        await context.read<FavoritesViewModel>().deleteFavoritePlace(place['id']);
-                                        if (ctx.mounted) Navigator.pop(ctx);
-                                      },
-                                      child: const Text('Supprimer', style: TextStyle(color: Colors.redAccent)),
-                                    ),
-                                  ],
+                                  ),
                                 ),
                               );
                             },
@@ -273,23 +300,49 @@ class _AccountViewState extends State<AccountView> {
                             onPressed: () {
                               showDialog(
                                 context: context,
-                                builder: (ctx) => AlertDialog(
-                                  backgroundColor: const Color(0xFF2C2C2E),
-                                  title: const Text('Supprimer le favori', style: TextStyle(color: Colors.white)),
-                                  content: const Text('Voulez-vous vraiment supprimer cet itinéraire favori ?', style: TextStyle(color: Colors.white70)),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(ctx),
-                                      child: const Text('Annuler', style: TextStyle(color: Colors.white)),
+                                builder: (ctx) => Dialog(
+                                  backgroundColor: Colors.transparent,
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(20),
+                                    child: BackdropFilter(
+                                      filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(24),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withValues(alpha: 0.5),
+                                          borderRadius: BorderRadius.circular(20),
+                                          border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1.5),
+                                        ),
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Text('Supprimer le favori', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                                            const SizedBox(height: 16),
+                                            const Text('Voulez-vous vraiment supprimer cet itinéraire favori ?', style: TextStyle(color: Colors.white70)),
+                                            const SizedBox(height: 24),
+                                            Wrap(
+                                              alignment: WrapAlignment.end,
+                                              spacing: 8,
+                                              children: [
+                                                TextButton(
+                                                  onPressed: () => Navigator.pop(ctx),
+                                                  child: const Text('Annuler', style: TextStyle(color: Colors.white)),
+                                                ),
+                                                TextButton(
+                                                  onPressed: () async {
+                                                    await context.read<FavoritesViewModel>().deleteFavoriteRoute(route['id']);
+                                                    if (ctx.mounted) Navigator.pop(ctx);
+                                                  },
+                                                  child: const Text('Supprimer', style: TextStyle(color: Colors.redAccent)),
+                                                ),
+                                              ],
+                                            )
+                                          ],
+                                        ),
+                                      ),
                                     ),
-                                    TextButton(
-                                      onPressed: () async {
-                                        await context.read<FavoritesViewModel>().deleteFavoriteRoute(route['id']);
-                                        if (ctx.mounted) Navigator.pop(ctx);
-                                      },
-                                      child: const Text('Supprimer', style: TextStyle(color: Colors.redAccent)),
-                                    ),
-                                  ],
+                                  ),
                                 ),
                               );
                             },
@@ -365,35 +418,68 @@ class _AccountViewState extends State<AccountView> {
                   onTap: () {
                     showDialog(
                       context: context,
-                      builder: (ctx) => AlertDialog(
-                        backgroundColor: const Color(0xFF2C2C2E),
-                        title: const Text('Supprimer mon compte', style: TextStyle(color: Colors.white)),
-                        content: const Text(
-                          'Voulez-vous vraiment supprimer votre compte ? Cette action est irréversible et toutes vos données (posts, favoris...) seront définitivement effacées.',
-                          style: TextStyle(color: Colors.white70),
+                      builder: (ctx) => Dialog(
+                        backgroundColor: Colors.transparent,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                            child: Container(
+                              padding: const EdgeInsets.all(24),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.5),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1.5),
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('Supprimer mon compte', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                                  const SizedBox(height: 16),
+                                  const Text(
+                                    'Voulez-vous vraiment supprimer votre compte ? Cette action est irréversible et toutes vos données (posts, favoris...) seront définitivement effacées.',
+                                    style: TextStyle(color: Colors.white70),
+                                  ),
+                                  const SizedBox(height: 24),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      TextButton(
+                                        style: TextButton.styleFrom(
+                                          padding: EdgeInsets.zero,
+                                          alignment: Alignment.centerLeft,
+                                        ),
+                                        onPressed: () => Navigator.pop(ctx),
+                                        child: const Text('Annuler', style: TextStyle(color: Colors.white)),
+                                      ),
+                                      TextButton(
+                                        style: TextButton.styleFrom(
+                                          padding: EdgeInsets.zero,
+                                          alignment: Alignment.centerLeft,
+                                        ),
+                                        onPressed: () async {
+                                          final authVm = context.read<AuthViewModel>();
+                                          final success = await authVm.deleteAccount();
+                                          if (success && ctx.mounted) {
+                                            Navigator.pop(ctx);
+                                            context.go('/login');
+                                          } else if (ctx.mounted) {
+                                            Navigator.pop(ctx);
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              const SnackBar(content: Text('Erreur lors de la suppression')),
+                                            );
+                                          }
+                                        },
+                                        child: const Text('Supprimer définitivement', style: TextStyle(color: Colors.redAccent)),
+                                      ),
+                                    ],
+                                  )
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(ctx),
-                            child: const Text('Annuler', style: TextStyle(color: Colors.white)),
-                          ),
-                          TextButton(
-                            onPressed: () async {
-                              final authVm = context.read<AuthViewModel>();
-                              final success = await authVm.deleteAccount();
-                              if (success && ctx.mounted) {
-                                Navigator.pop(ctx);
-                                context.go('/login');
-                              } else if (ctx.mounted) {
-                                Navigator.pop(ctx);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Erreur lors de la suppression')),
-                                );
-                              }
-                            },
-                            child: const Text('Supprimer définitivement', style: TextStyle(color: Colors.redAccent)),
-                          ),
-                        ],
                       ),
                     );
                   },

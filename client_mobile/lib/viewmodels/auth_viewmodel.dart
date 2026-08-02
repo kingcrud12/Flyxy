@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import '../services/auth_service.dart';
+import '../core/dio_client.dart';
 
 class AuthViewModel extends ChangeNotifier {
   final AuthService _authService = AuthService();
@@ -98,7 +99,8 @@ class AuthViewModel extends ChangeNotifier {
     _lastName = "";
     _email = "";
     _profilePicture = "";
-    // Dans l'idéal, il faudrait appeler une route /logout pour vider le cookie HttpOnly
+    // Vider le cookie HttpOnly du client Dio
+    DioClient.clearCookies();
     notifyListeners();
   }
 

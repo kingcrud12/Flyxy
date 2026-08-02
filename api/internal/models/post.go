@@ -13,6 +13,7 @@ type Post struct {
 	Text      string         `gorm:"type:text" json:"text"`
 	ImageURL  string         `gorm:"type:text" json:"image_url"`
 	Likes     int            `gorm:"default:0" json:"likes"`
+	Comments  []Comment      `gorm:"foreignKey:PostID;constraint:OnDelete:CASCADE;" json:"comments"`
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`

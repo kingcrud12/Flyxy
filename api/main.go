@@ -41,7 +41,7 @@ func main() {
 	postService := services.NewPostService(postRepo)
 	postHandler := handlers.NewPostHandler(postService)
 
-	chatService := services.NewChatService()
+	chatService := services.NewChatService(transportService)
 	chatHandler := handlers.NewChatHandler(chatService)
 
 	router := gin.Default()

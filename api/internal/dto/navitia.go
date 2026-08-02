@@ -12,6 +12,17 @@ type NavitiaDisruption struct {
 	Messages []struct {
 		Text string `json:"text"`
 	} `json:"messages"`
+	ImpactedObjects []struct {
+		PtObject struct {
+			Line *struct {
+				Name string `json:"name"`
+				Code string `json:"code"`
+				Network struct {
+					Name string `json:"name"`
+				} `json:"network"`
+			} `json:"line"`
+		} `json:"pt_object"`
+	} `json:"impacted_objects"`
 }
 
 type NavitiaDisruptionsResponse struct {

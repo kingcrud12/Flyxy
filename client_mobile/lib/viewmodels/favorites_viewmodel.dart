@@ -61,4 +61,10 @@ class FavoritesViewModel extends ChangeNotifier {
       rethrow;
     }
   }
+
+  void clearFavorites() {
+    _places = [];
+    _routes = [];
+    notifyListeners();
+  }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
+import 'dart:ui';
 import 'package:provider/provider.dart';
 import '../services/transport_service.dart';
 import '../viewmodels/favorites_viewmodel.dart';
@@ -130,7 +131,46 @@ class _ItineraryResultsViewState extends State<ItineraryResultsView> {
                             widget.toId,
                           );
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Itinéraire ajouté aux favoris !')));
+                            showDialog(
+                              context: context,
+                              builder: (ctx) => Dialog(
+                                backgroundColor: Colors.transparent,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(20),
+                                  child: BackdropFilter(
+                                    filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(24),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withValues(alpha: 0.5),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1.5),
+                                      ),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: [
+                                          const Icon(Icons.favorite, color: Colors.redAccent, size: 64),
+                                          const SizedBox(height: 16),
+                                          const Text('Favori ajouté', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                                          const SizedBox(height: 8),
+                                          const Text('L\'itinéraire a été ajouté à vos favoris avec succès.', style: TextStyle(color: Colors.white70), textAlign: TextAlign.center),
+                                          const SizedBox(height: 24),
+                                          SizedBox(
+                                            width: double.infinity,
+                                            child: ElevatedButton(
+                                              style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).primaryColor),
+                                              onPressed: () => Navigator.pop(ctx),
+                                              child: const Text('OK', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                                            ),
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
                           }
                         } catch (e) {
                           if (context.mounted) {

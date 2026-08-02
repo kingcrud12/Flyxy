@@ -1,11 +1,14 @@
 import 'dart:ui';
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:apple_maps_flutter/apple_maps_flutter.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart' as ll;
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 import '../models/map_stop.dart';
 import '../services/transport_service.dart';
-import 'home_view.dart' show DepartureCard; // We need to expose _DepartureCard
+import 'home_view.dart' show DepartureCard;
 import '../viewmodels/transport_viewmodel.dart';
 import '../viewmodels/favorites_viewmodel.dart';
 import '../widgets/liquid_background.dart';
@@ -28,16 +31,20 @@ class MapViewScreen extends StatefulWidget {
 
 class _MapViewScreenState extends State<MapViewScreen> {
   AppleMapController? mapController;
+  MapController? androidMapController;
   Position? currentPosition;
   Set<Annotation> annotations = {};
+  List<Marker> androidMarkers = [];
   List<MapStop> stops = [];
   bool isLoading = true;
 
   Timer? _trackingTimer;
   dynamic _trackedVehicleJourney;
   LatLng? _trackedVehicleLocation;
+  ll.LatLng? _trackedAndroidLocation;
   String? _trackedVehicleJourneyId;
   Annotation? _trackedAnnotation;
+  Marker? _trackedAndroidMarker;
 
   @override
   void initState() {
@@ -97,6 +104,7 @@ class _MapViewScreenState extends State<MapViewScreen> {
 
   void _buildAnnotations() {
     annotations.clear();
+    androidMarkers.clear();
     for (var stop in stops) {
       annotations.add(Annotation(
         annotationId: AnnotationId(stop.id),
@@ -108,10 +116,25 @@ class _MapViewScreenState extends State<MapViewScreen> {
           _showStopDetails(stop);
         },
       ));
+
+      androidMarkers.add(
+        Marker(
+          point: ll.LatLng(stop.lat, stop.lon),
+          width: 40,
+          height: 40,
+          child: GestureDetector(
+            onTap: () => _showStopDetails(stop),
+            child: const Icon(Icons.location_on, color: Colors.blue, size: 40),
+          ),
+        ),
+      );
     }
     
     if (_trackedAnnotation != null) {
       annotations.add(_trackedAnnotation!);
+    }
+    if (_trackedAndroidMarker != null) {
+      androidMarkers.add(_trackedAndroidMarker!);
     }
   }
 
@@ -197,15 +220,23 @@ class _MapViewScreenState extends State<MapViewScreen> {
     if (newPos != null && mounted) {
       setState(() {
         _trackedVehicleLocation = newPos;
+        _trackedAndroidLocation = ll.LatLng(newPos!.latitude, newPos!.longitude);
         _trackedAnnotation = Annotation(
-          annotationId: AnnotationId("tracked_$newPos"),
+          annotationId: AnnotationId(_trackedVehicleJourneyId!),
           position: newPos!,
-          infoWindow: const InfoWindow(title: "Transport suivi"),
-          // Ideally we would use a custom icon here, but standard pin is okay for simulation
+          icon: BitmapDescriptor.defaultAnnotation,
+          infoWindow: InfoWindow(title: "Véhicule en direct"),
+        );
+        _trackedAndroidMarker = Marker(
+          point: _trackedAndroidLocation!,
+          width: 40,
+          height: 40,
+          child: const Icon(Icons.directions_bus, color: Colors.red, size: 40),
         );
         _buildAnnotations();
       });
       mapController?.animateCamera(CameraUpdate.newLatLng(newPos!));
+      androidMapController?.move(_trackedAndroidLocation!, 16.0);
     }
   }
 
@@ -299,6 +330,48 @@ class _MapViewScreenState extends State<MapViewScreen> {
                                         await favoritesVm.addFavoritePlace(stop.name, stop.id, iconName);
                                         if (ctx.mounted) {
                                           Navigator.pop(ctx);
+                                        }
+                                        if (context.mounted) {
+                                          showDialog(
+                                            context: context,
+                                            builder: (ctx2) => Dialog(
+                                              backgroundColor: Colors.transparent,
+                                              child: ClipRRect(
+                                                borderRadius: BorderRadius.circular(20),
+                                                child: BackdropFilter(
+                                                  filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                                                  child: Container(
+                                                    padding: const EdgeInsets.all(24),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.black.withValues(alpha: 0.5),
+                                                      borderRadius: BorderRadius.circular(20),
+                                                      border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1.5),
+                                                    ),
+                                                    child: Column(
+                                                      mainAxisSize: MainAxisSize.min,
+                                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                                      children: [
+                                                        const Icon(Icons.favorite, color: Colors.redAccent, size: 64),
+                                                        const SizedBox(height: 16),
+                                                        const Text('Favori ajouté', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                                                        const SizedBox(height: 8),
+                                                        const Text('L\'arrêt a été ajouté à vos favoris avec succès.', style: TextStyle(color: Colors.white70), textAlign: TextAlign.center),
+                                                        const SizedBox(height: 24),
+                                                        SizedBox(
+                                                          width: double.infinity,
+                                                          child: ElevatedButton(
+                                                            style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).primaryColor),
+                                                            onPressed: () => Navigator.pop(ctx2),
+                                                            child: const Text('OK', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                                                          ),
+                                                        )
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          );
                                         }
                                       } catch (e) {
                                         if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(e.toString())));
@@ -420,21 +493,41 @@ class _MapViewScreenState extends State<MapViewScreen> {
       ),
       body: currentPosition == null
           ? const Center(child: CircularProgressIndicator())
-          : AppleMap(
-              initialCameraPosition: CameraPosition(
-                target: LatLng(
-                  widget.initialLat ?? currentPosition!.latitude, 
-                  widget.initialLon ?? currentPosition!.longitude,
-                ),
-                zoom: widget.initialLat != null ? 16 : 15,
-              ),
-              onMapCreated: (AppleMapController controller) {
-                mapController = controller;
-              },
-              annotations: annotations,
-              myLocationEnabled: true,
-              myLocationButtonEnabled: true,
-            ),
+          : (Platform.isIOS
+              ? AppleMap(
+                  initialCameraPosition: CameraPosition(
+                    target: LatLng(
+                      widget.initialLat ?? currentPosition!.latitude, 
+                      widget.initialLon ?? currentPosition!.longitude,
+                    ),
+                    zoom: widget.initialLat != null ? 16 : 15,
+                  ),
+                  onMapCreated: (AppleMapController controller) {
+                    mapController = controller;
+                  },
+                  annotations: annotations,
+                  myLocationEnabled: true,
+                  myLocationButtonEnabled: true,
+                )
+              : FlutterMap(
+                  mapController: androidMapController = MapController(),
+                  options: MapOptions(
+                    initialCenter: ll.LatLng(
+                      widget.initialLat ?? currentPosition!.latitude, 
+                      widget.initialLon ?? currentPosition!.longitude,
+                    ),
+                    initialZoom: widget.initialLat != null ? 16.0 : 15.0,
+                  ),
+                  children: [
+                    TileLayer(
+                      urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      userAgentPackageName: 'com.flyxy.app',
+                    ),
+                    MarkerLayer(
+                      markers: androidMarkers,
+                    ),
+                  ],
+                )),
     );
   }
 }
